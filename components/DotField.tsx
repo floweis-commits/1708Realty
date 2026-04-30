@@ -20,12 +20,13 @@ export default function DotField() {
       canvas.height = h * dpr;
       ctx.scale(dpr, dpr);
     };
-    resize();
-    window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", (e) => {
+    const onMove = (e: MouseEvent) => {
       pointer.x = e.clientX / window.innerWidth - 0.5;
       pointer.y = e.clientY / window.innerHeight - 0.5;
-    });
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    window.addEventListener("mousemove", onMove);
 
     const spacing = 24;
     let raf = 0;
@@ -35,13 +36,13 @@ export default function DotField() {
       ctx.clearRect(0, 0, w, h);
       const elapsed = (t - start) / 20000;
       const pulse = 0.5 + 0.5 * Math.sin(elapsed * Math.PI * 2);
+      const dx = pointer.x * 20;
+      const dy = pointer.y * 20;
       for (let y = 0; y < h; y += spacing) {
+        const fade = 1 - y / h;
+        const a = 0.08 + 0.18 * pulse * fade;
+        ctx.fillStyle = `rgba(255,255,255,${a})`;
         for (let x = 0; x < w; x += spacing) {
-          const dx = pointer.x * 20;
-          const dy = pointer.y * 20;
-          const fade = 1 - y / h;
-          const a = 0.08 + 0.18 * pulse * fade;
-          ctx.fillStyle = `rgba(255,255,255,${a})`;
           ctx.fillRect(x + dx, y + dy, 1.4, 1.4);
         }
       }
@@ -49,7 +50,7 @@ export default function DotField() {
     };
     raf = requestAnimationFrame(tick);
 
-    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); };
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", resize); window.removeEventListener("mousemove", onMove); };
   }, []);
 
   return <canvas ref={ref} className="absolute inset-0 w-full h-full" />;

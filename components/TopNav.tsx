@@ -1,11 +1,12 @@
 "use client";
 import Link from "next/link";
+import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 export default function TopNav({ role, email }: { role: "tenant" | "landlord"; email?: string | null }) {
   const router = useRouter();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const base = role === "tenant" ? "/tenant" : "/landlord";
 
   async function signOut() {
