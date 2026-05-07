@@ -1,0 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --accent:#F97316; --secondary:#78716C; --tertiary:#E6FF1A; --ink:#292524; --line:#D6D3D1; }
+
+html, body { background:#fff; color:#78716C; font-family: Inter, system-ui, sans-serif; }
+
+.label-md { font-size:10px; line-height:15px; letter-spacing:0.2em; text-transform:uppercase; font-weight:400; }
+.body-sm  { font-size:12px; line-height:16px; }
+.display  { font-size:clamp(56px,12vw,174px); line-height:0.78; letter-spacing:-0.05em; text-transform:uppercase; font-weight:500; }
+
+.shell { position:relative; background:#fff; border:1px solid var(--line); box-shadow:-20px -20px 60px 0 rgba(0,0,0,0.05); }
+.shell::before { content:""; position:absolute; inset:-1px; background:linear-gradient(to top right, rgba(249,115,22,0.10), rgba(0,0,0,0)); pointer-events:none; z-index:-1; }
+
+.btn-primary { background:var(--accent); color:#fff; padding:12px 20px; border-radius:0; border:0; transition:background 150ms ease; letter-spacing:0.2em; text-transform:uppercase; font-size:10px; cursor:pointer; }
+.btn-primary:hover { background:#ea580c; }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+.btn-secondary { color:var(--secondary); padding:2px 0; border:0; border-bottom:1px solid var(--line); background:transparent; letter-spacing:0.2em; text-transform:uppercase; font-size:10px; transition:border-color 150ms ease, color 150ms ease; cursor:pointer; }
+.btn-secondary:hover { color:var(--ink); border-bottom-color:var(--ink); }
+
+.input-underline { width:100%; background:transparent; border:0; border-bottom:1px solid var(--line); padding:8px 0; font-size:14px; color:var(--ink); outline:none; transition:border-color 150ms ease; }
+.input-underline:focus { border-bottom-color:var(--accent); }
+
+.badge { display:inline-block; padding:2px 6px; border-radius:0; font-size:10px; letter-spacing:0.2em; text-transform:uppercase; }
+.badge-submitted { background:#78716C; color:#fff; }
+.badge-progress  { background:#F97316; color:#fff; }
+.badge-vendor    { background:#292524; color:#E6FF1A; }
+.badge-completed { background:#292524; color:#fff; }
+.badge-closed    { background:#D6D3D1; color:#292524; }
