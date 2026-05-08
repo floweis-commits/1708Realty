@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-type Vendor = { id: string; name: string; email: string; categories: string[] };
+type Vendor = { id: string; name: string; email: string | null; phone: string | null; categories: string[] };
 type Order = { id: string; title: string; description: string | null; category: string; image_url: string | null };
 
 export default function VendorEmailForm({ order, vendors }: { order: Order; vendors: Vendor[] }) {
@@ -10,7 +10,9 @@ export default function VendorEmailForm({ order, vendors }: { order: Order; vend
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function send() {
+  const vendor = vendors.find(v => v.id === vendorId);
+
+  async function sendEmail() {
     setSending(true); setError(null);
     const res = await fetch("/api/vendor-email", {
       method: "POST",
@@ -22,16 +24,32 @@ export default function VendorEmailForm({ order, vendors }: { order: Order; vend
     setSending(false);
   }
 
-  if (vendors.length === 0) return <div className="body-sm text-secondary">No vendors match this category. <a href="/landlord/vendors" className="underline">Add vendors</a></div>;
-  if (sent) return <div className="body-sm text-ink">Email sent to vendor.</div>;
+  if (vendors.length === 0) return (
+    <div className="body-sm text-secondary">No vendors match this category. <a href="/landlord/vendors" className="underline">Add vendors</a></div>
+  );
+
+  if (sent) return <div className="body-sm text-ink">Email sent to {vendor?.name}.</div>;
 
   return (
     <div className="space-y-6">
       <select value={vendorId} onChange={e => setVendorId(e.target.value)} className="input-underline bg-transparent">
-        {vendors.map(v => <option key={v.id} value={v.id}>{v.name} — {v.email}</option>)}
+        {vendors.map(v => <option key={v.id} value={v.id}>{v.name}{v.phone ? ` — ${v.phone}` : ""}{v.email ? ` — ${v.email}` : ""}</option>)}
       </select>
+      {vendor?.phone && (
+        <div className="body-sm text-secondary">Phone: <a href={`tel:${vendor.phone}`} className="text-ink">{vendor.phone}</a></div>
+      )}
       {error && <p className="body-sm text-accent">{error}</p>}
-      <button onClick={send} disabled={sending || !vendorId} className="btn-primary">{sending ? "Sending" : "Send Work Order"}</button>
+      <div className="flex gap-4">
+        {vendor?.phone && (
+          <a href={`tel:${vendor.phone}`} className="btn-primary" style={{textDecoration:"none"}}>Call Vendor</a>
+        )}
+        {vendor?.email && (
+          <button onClick={sendEmail} disabled={sending} className="btn-secondary">{sending ? "Sending" : "Email Work Order"}</button>
+        )}
+        {!vendor?.email && !vendor?.phone && (
+          <div className="body-sm text-secondary">No contact info for this vendor.</div>
+        )}
+      </div>
     </div>
   );
 }

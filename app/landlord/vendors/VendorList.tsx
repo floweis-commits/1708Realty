@@ -3,9 +3,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const CATEGORIES = ["Plumbing","Electrical","HVAC / Heating / Cooling","Roof / Leak","Appliance","Pest Control","General Maintenance","Other"];
+const CATEGORIES = ["Plumbing","Electrical","HVAC / Heating / Cooling","Roof / Leak","Appliance","Pest Control","General Maintenance","Garage Door","Window","Fence","Mold","Power Washing","Rekeying","Other"];
 
-type Vendor = { id: string; name: string; email: string; phone: string | null; categories: string[]; notes: string | null };
+type Vendor = { id: string; name: string; email: string | null; phone: string | null; categories: string[]; notes: string | null };
 
 export default function VendorList({ vendors }: { vendors: Vendor[] }) {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function VendorList({ vendors }: { vendors: Vendor[] }) {
 
   async function save() {
     setSaving(true);
-    await supabase.from("vendors").insert({ name, email, phone: phone || null, categories: selected, notes: notes || null });
+    await supabase.from("vendors").insert({ name, email: email || null, phone: phone || null, categories: selected, notes: notes || null });
     setSaving(false);
     setAdding(false); setName(""); setEmail(""); setPhone(""); setNotes(""); setSelected([]);
     router.refresh();
@@ -43,11 +43,17 @@ export default function VendorList({ vendors }: { vendors: Vendor[] }) {
         ) : (
           <ul>
             {vendors.map(v => (
-              <li key={v.id} className="flex items-center gap-8 px-8 py-6 border-b border-line last:border-0">
+              <li key={v.id} className="flex items-start gap-8 px-8 py-6 border-b border-line last:border-0">
                 <div className="flex-1">
                   <div className="text-ink">{v.name}</div>
-                  <div className="body-sm text-secondary mt-1">{v.email}{v.phone ? ` · ${v.phone}` : ""}</div>
+                  <div className="body-sm text-secondary mt-1">
+                    {v.phone && <span>{v.phone}</span>}
+                    {v.phone && v.email && <span> · </span>}
+                    {v.email && <span>{v.email}</span>}
+                    {!v.phone && !v.email && <span className="italic">No contact info</span>}
+                  </div>
                   {v.categories.length > 0 && <div className="flex gap-2 mt-2 flex-wrap">{v.categories.map(c => <span key={c} className="badge badge-closed">{c}</span>)}</div>}
+                  {v.notes && <div className="body-sm text-secondary mt-2">{v.notes}</div>}
                 </div>
                 <button onClick={() => remove(v.id)} className="btn-secondary">Remove</button>
               </li>
@@ -61,13 +67,13 @@ export default function VendorList({ vendors }: { vendors: Vendor[] }) {
           <div className="label-md text-secondary">New Vendor</div>
           <div className="space-y-6">
             <div><label className="label-md text-secondary">Name</label><input value={name} onChange={e=>setName(e.target.value)} className="input-underline" /></div>
-            <div><label className="label-md text-secondary">Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="input-underline" /></div>
             <div><label className="label-md text-secondary">Phone (optional)</label><input value={phone} onChange={e=>setPhone(e.target.value)} className="input-underline" /></div>
+            <div><label className="label-md text-secondary">Email (optional)</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} className="input-underline" /></div>
             <div><label className="label-md text-secondary block mb-3">Categories</label><div className="flex flex-wrap gap-2">{CATEGORIES.map(c=>(<button type="button" key={c} onClick={()=>toggleCat(c)} className={`badge cursor-pointer ${selected.includes(c) ? "badge-progress" : "badge-closed"}`}>{c}</button>))}</div></div>
             <div><label className="label-md text-secondary">Notes (optional)</label><textarea value={notes} onChange={e=>setNotes(e.target.value)} rows={3} className="input-underline resize-none" /></div>
           </div>
           <div className="flex gap-4">
-            <button onClick={save} disabled={!name || !email || saving} className="btn-primary">{saving ? "Saving" : "Add Vendor"}</button>
+            <button onClick={save} disabled={!name || saving} className="btn-primary">{saving ? "Saving" : "Add Vendor"}</button>
             <button onClick={() => setAdding(false)} className="btn-secondary">Cancel</button>
           </div>
         </div>
