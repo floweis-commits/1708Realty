@@ -1,12 +1,16 @@
-import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 import StatusBadge from "@/components/StatusBadge";
 
 type PaymentRow = { id:string; amount:number|null; status:string; current_period_end:string|null; tenant:{full_name:string|null;email:string|null}|null };
 const paymentBadgeStatus: Record<string, string> = { active: "In Progress", past_due: "Completed" };
 
 export default async function LandlordBilling() {
-  const supabase = createClient();
-  const { data: payments } = await supabase.from("payments").select("id,amount,status,current_period_end,tenant:profiles!payments_tenant_id_fkey(full_name,email)").order("created_at", { ascending: false });
+  const service = createServiceClient();
+  const { data: payments } = await service
+    .from("payments")
+    .select("id,amount,status,current_period_end,tenant:profiles!payments_tenant_id_fkey(full_name,email)")
+    .order("created_at", { ascending: false });
+
   return (
     <div className="space-y-12">
       <h1 className="label-md text-secondary">Tenant Billing</h1>
