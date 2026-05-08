@@ -12,11 +12,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault(); setLoading(true); setError(null);
-    const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
     if (err) { setError(err.message); setLoading(false); return; }
-    const { data: profile } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
-    router.push(profile?.role === "landlord" ? "/landlord/dashboard" : "/tenant/dashboard");
+    router.push("/api/auth/role-redirect");
   }
 
   return (
