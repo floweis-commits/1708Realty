@@ -1,9 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/server";
 
 export default async function TenantBilling({ searchParams }: { searchParams: { success?: string } }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: payment } = await supabase.from("payments").select("*").eq("tenant_id", user!.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+  const service = createServiceClient();
+  const { data: payment } = await service
+    .from("payments").select("*").eq("tenant_id", user!.id)
+    .order("created_at", { ascending: false }).limit(1).maybeSingle();
+
   return (
     <div className="space-y-12">
       <h1 className="label-md text-secondary">Billing</h1>
