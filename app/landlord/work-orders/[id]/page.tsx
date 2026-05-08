@@ -1,11 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import StatusForm from "./StatusForm";
+import VendorEmailForm from "./VendorEmailForm";
 import { notFound } from "next/navigation";
 
 export default async function WorkOrderDetail({ params }: { params: { id: string } }) {
   const supabase = createClient();
-  const { data: order } = await supabase.from("work_orders").select("*").eq("id", params.id).single();
+  const [{ data: order }, { data: vendors }] = await Promise.all([
+    supabase.from("work_orders").select("*").eq("id", params.id).single(),
+    supabase.from("vendors").select("id,name,email,categories").order("name"),
+  ]);
   if (!order) return notFound();
+
+  const matching = (vendors ?? []).filter((v: any) =>
+    v.categories.length === 0 || v.categories.includes(order.category)
+  );
 
   return (
     <div className="space-y-12 max-w-3xl">
@@ -21,6 +29,10 @@ export default async function WorkOrderDetail({ params }: { params: { id: string
       <div className="shell p-8 space-y-6">
         <div className="label-md text-secondary">Status</div>
         <StatusForm id={order.id} current={order.status} />
+      </div>
+      <div className="shell p-8 space-y-6">
+        <div className="label-md text-secondary">Contact Vendor</div>
+        <VendorEmailForm order={order} vendors={matching} />
       </div>
       <div className="body-sm text-secondary">
         Submitted {new Date(order.created_at).toLocaleString()} · Updated {new Date(order.updated_at).toLocaleString()}

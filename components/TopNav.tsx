@@ -21,12 +21,9 @@ export default function TopNav({ role, email }: { role: "tenant" | "landlord"; e
         <Link href={`${base}/dashboard`} className="label-md text-ink">1708 — Realty</Link>
         <Link href={`${base}/dashboard`} className="label-md text-secondary hover:text-ink">Dashboard</Link>
         <Link href={`${base}/work-orders`} className="label-md text-secondary hover:text-ink">Work Orders</Link>
-        {role === "tenant" && (
-          <Link href="/tenant/billing" className="label-md text-secondary hover:text-ink">Billing</Link>
-        )}
-        {role === "landlord" && (
-          <Link href="/landlord/billing" className="label-md text-secondary hover:text-ink">Tenant Payments</Link>
-        )}
+        {role === "tenant" && <Link href="/tenant/billing" className="label-md text-secondary hover:text-ink">Billing</Link>}
+        {role === "landlord" && <Link href="/landlord/vendors" className="label-md text-secondary hover:text-ink">Vendors</Link>}
+        {role === "landlord" && <Link href="/landlord/billing" className="label-md text-secondary hover:text-ink">Tenant Payments</Link>}
       </div>
       <div className="flex items-center gap-8">
         <span className="label-md text-secondary">{email}</span>
