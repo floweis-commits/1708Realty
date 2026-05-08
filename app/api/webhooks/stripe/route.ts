@@ -10,19 +10,29 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
   try { event = stripe.webhooks.constructEvent(body, sig!, process.env.STRIPE_WEBHOOK_SECRET!); }
   catch (err: any) { return NextResponse.json({ error: `Webhook: ${err.message}` }, { status: 400 }); }
+
   const service = createServiceClient();
+
   async function upsertSubscription(sub: Stripe.Subscription) {
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
     const customer = await stripe.customers.retrieve(customerId);
     const userId = (customer as Stripe.Customer).metadata?.supabase_user_id;
     if (!userId) return;
     const item = sub.items.data[0];
+    const periodEnd = sub.current_period_end;
+    const periodEndDate = typeof periodEnd === "number"
+      ? new Date(periodEnd * 1000)
+      : new Date(periodEnd);
     await service.from("payments").upsert({
-      tenant_id: userId, stripe_customer_id: customerId, stripe_sub_id: sub.id,
-      amount: item?.price.unit_amount ?? null, status: sub.status,
-      current_period_end: new Date(sub.current_period_end*1000).toISOString(),
+      tenant_id: userId,
+      stripe_customer_id: customerId,
+      stripe_sub_id: sub.id,
+      amount: item?.price.unit_amount ?? null,
+      status: sub.status,
+      current_period_end: periodEndDate.toISOString(),
     }, { onConflict: "stripe_sub_id" });
   }
+
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
