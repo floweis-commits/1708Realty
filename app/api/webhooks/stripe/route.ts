@@ -29,7 +29,9 @@ export async function POST(req: Request) {
       stripe_sub_id: sub.id,
       amount: item?.price.unit_amount ?? null,
       status: sub.status,
-      current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+      current_period_end: typeof sub.current_period_end === "number"
+        ? new Date(sub.current_period_end * 1000).toISOString()
+        : new Date(sub.current_period_end as unknown as string).toISOString(),
     }, { onConflict: "stripe_sub_id" });
   }
 
