@@ -30,11 +30,13 @@ export async function POST(req: Request) {
       stripe_sub_id: sub.id,
       amount: item?.price.unit_amount ?? null,
       status: sub.status,
-      current_period_end: sub.current_period_end
-        ? (typeof sub.current_period_end === "number"
-            ? new Date(sub.current_period_end * 1000).toISOString()
-            : new Date(sub.current_period_end as unknown as string).toISOString())
-        : null,
+      current_period_end: (() => {
+        const v = sub.current_period_end;
+        if (!v) return null;
+        if (v instanceof Date) return (v as Date).toISOString();
+        if (typeof v === "number") return new Date(v * 1000).toISOString();
+        return null;
+      })(),
     }, { onConflict: "stripe_sub_id" });
     if (error) console.error("[webhook] upsert error:", error);
     else console.log("[webhook] upsert OK for tenant", userId);
