@@ -6,12 +6,23 @@ import { createServiceClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const sig = req.headers.get("stripe-signature"); const body = await req.text();
+  const sig = req.headers.get("stripe-signature");
+  const body = await req.text();
   let event: Stripe.Event;
-  try { event = stripe.webhooks.constructEvent(body, sig!, process.env.STRIPE_WEBHOOK_SECRET!); }
-  catch (err: any) { return NextResponse.json({ error: `Webhook: ${err.message}` }, { status: 400 }); }
+  try {
+    event = stripe.webhooks.constructEvent(body, sig!, process.env.STRIPE_WEBHOOK_SECRET!);
+  } catch (err: any) {
+    return NextResponse.json({ error: `Webhook: ${err.message}` }, { status: 400 });
+  }
 
   const service = createServiceClient();
+
+  function toPeriodEnd(v: unknown): string | null {
+    if (!v) return null;
+    if (v instanceof Date) return v.toISOString();
+    if (typeof v === "number") return new Date(v * 1000).toISOString();
+    return null;
+  }
 
   async function upsertSubscription(sub: Stripe.Subscription) {
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
@@ -19,25 +30,23 @@ export async function POST(req: Request) {
     const userId = (customer as Stripe.Customer).metadata?.supabase_user_id;
     if (!userId) return;
     const item = sub.items.data[0];
-    const periodEnd = sub.current_period_end;
-    const periodEndDate = typeof periodEnd === "number"
-      ? new Date(periodEnd * 1000)
-      : new Date(periodEnd);
-    await service.from("payments").upsert({
+    const { error } = await service.from("payments").upsert({
       tenant_id: userId,
       stripe_customer_id: customerId,
       stripe_sub_id: sub.id,
       amount: item?.price.unit_amount ?? null,
       status: sub.status,
-      current_period_end: periodEndDate.toISOString(),
+      current_period_end: toPeriodEnd(sub.current_period_end),
     }, { onConflict: "stripe_sub_id" });
+    if (error) console.error("[webhook] upsert error:", error);
   }
 
   switch (event.type) {
     case "customer.subscription.created":
     case "customer.subscription.updated":
     case "customer.subscription.deleted":
-      await upsertSubscription(event.data.object as Stripe.Subscription); break;
+      await upsertSubscription(event.data.object as Stripe.Subscription);
+      break;
     case "invoice.payment_succeeded":
     case "invoice.payment_failed": {
       const invoice = event.data.object as Stripe.Invoice;
@@ -48,5 +57,6 @@ export async function POST(req: Request) {
       break;
     }
   }
+
   return NextResponse.json({ received: true });
 }
