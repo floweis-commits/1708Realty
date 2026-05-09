@@ -21,9 +21,10 @@ export async function POST(req: Request) {
     const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
     const customer = await stripe.customers.retrieve(customerId);
     const userId = (customer as Stripe.Customer).metadata?.supabase_user_id;
-    if (!userId) return;
+    console.log("[webhook] customerId:", customerId, "userId:", userId, "sub.status:", sub.status);
+    if (!userId) { console.log("[webhook] no supabase_user_id on customer — skipping"); return; }
     const item = sub.items.data[0];
-    await service.from("payments").upsert({
+    const { error } = await service.from("payments").upsert({
       tenant_id: userId,
       stripe_customer_id: customerId,
       stripe_sub_id: sub.id,
@@ -33,6 +34,8 @@ export async function POST(req: Request) {
         ? new Date(sub.current_period_end * 1000).toISOString()
         : new Date(sub.current_period_end as unknown as string).toISOString(),
     }, { onConflict: "stripe_sub_id" });
+    if (error) console.error("[webhook] upsert error:", error);
+    else console.log("[webhook] upsert OK for tenant", userId);
   }
 
   switch (event.type) {
