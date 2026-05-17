@@ -23,7 +23,7 @@ export default async function LandlordBilling() {
     .select("id,amount,status,current_period_end,created_at,tenant:profiles!payments_tenant_id_fkey(full_name,email)")
     .order("created_at", { ascending: false });
 
-  const rows = (payments ?? []) as PaymentRow[];
+  const rows = (payments ?? []) as unknown as PaymentRow[];
   const totalActive = rows
     .filter((p) => p.status === "active")
     .reduce((sum, p) => sum + (p.amount ?? 0), 0);
@@ -32,7 +32,6 @@ export default async function LandlordBilling() {
     <div className="space-y-12">
       <h1 className="label-md text-secondary">Receivables</h1>
 
-      {/* Summary stat */}
       {rows.length > 0 && (
         <div className="shell p-10 flex items-end justify-between">
           <div>
@@ -50,7 +49,6 @@ export default async function LandlordBilling() {
         </div>
       )}
 
-      {/* Ledger */}
       <div className="shell">
         {rows.length === 0 ? (
           <div className="p-12 body-sm text-secondary">No payment records.</div>
