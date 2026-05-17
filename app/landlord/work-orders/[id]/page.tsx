@@ -3,10 +3,11 @@ import StatusForm from "./StatusForm";
 import VendorEmailForm from "./VendorEmailForm";
 import { notFound } from "next/navigation";
 
-export default async function WorkOrderDetail({ params }: { params: { id: string } }) {
+export default async function WorkOrderDetail({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = createClient();
   const [{ data: order }, { data: vendors }] = await Promise.all([
-    supabase.from("work_orders").select("*").eq("id", params.id).single(),
+    supabase.from("work_orders").select("*").eq("id", id).single(),
     supabase.from("vendors").select("id,name,email,categories").order("name"),
   ]);
   if (!order) return notFound();
