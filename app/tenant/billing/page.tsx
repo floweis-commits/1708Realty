@@ -18,8 +18,9 @@ const statusColor: Record<string, string> = {
 export default async function TenantBilling({
   searchParams,
 }: {
-  searchParams: { success?: string };
+  searchParams: Promise<{ success?: string }>;
 }) {
+  const { success } = await searchParams;
   const supabase = createClient();
   const {
     data: { user },
@@ -38,7 +39,7 @@ export default async function TenantBilling({
     <div className="space-y-12">
       <h1 className="label-md text-secondary">Billing</h1>
 
-      {searchParams.success && (
+      {success && (
         <div className="shell px-8 py-5 body-sm text-ink border-l-2 border-accent">
           Payment confirmed — you&apos;re all set.
         </div>
